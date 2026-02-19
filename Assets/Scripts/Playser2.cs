@@ -2,152 +2,152 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 namespace Scripts.Player2
 {
-    public class Playser2 : MonoBehaviour
+    public class Player2 : MonoBehaviour
     {
         Rigidbody rb;
-        public enum MoveState //달리면서 쏘기 위해 상 하체 상태를 나눈다. 하체의 이동 상태
+
+        public enum MoveState
         {
             Idle,
             Run,
             Crouch,
             CrouchMove,
-            Jump,
+            Jump
         }
-
-        public enum AimState //상체의 조준 상태
+        public enum AimState
         {
             Forward,
             Up,
-            Down,
+            Down
         }
 
+        [Header("플레이어 설정")]
         public float moveSpeed = 3.0f;
+        public float jumpPower = 5f;
 
+        [Header("지면체크 설정")]
+        public float groundCheckDistance = 1f;
+        public LayerMask GroundLayer;
+        public bool isGrounded;
 
+        // 상태 변수
         public MoveState currentMoveState = MoveState.Idle;
         public AimState currentAimState = AimState.Forward;
 
+        private float horizontalInput = 0f;
 
         void Awake()
         {
             rb = GetComponent<Rigidbody>();
         }
 
-
         void Update()
         {
-            MoveInput();
-            StateAction();
-
+            CheckGround();
+            StateInput();
+            UpdateAimState();
         }
 
-        void MoveInput() //이동입력에 따른 상체와 하체 상태 결정, 여기서는 상태만 결정.
+        void FixedUpdate()
         {
-            if (currentMoveState != MoveState.Jump) //점프중이 아닐 때 앉기와 앉은자세 이동
+            ApplyMovement();
+        }
+
+        void CheckGround()
+        {
+            RaycastHit hit;
+            isGrounded = Physics.Raycast(transform.position, Vector3.down, out hit, groundCheckDistance, GroundLayer);
+            Debug.DrawRay(transform.position, Vector3.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
+        }
+
+        void StateInput()
+        {
+            horizontalInput = 0f;
+            if (Input.GetKey(KeyCode.A)) horizontalInput = -1f;
+            if (Input.GetKey(KeyCode.D)) horizontalInput = 1f;
+
+            if (!isGrounded)
             {
-                if (Input.GetKey(KeyCode.S))
+                currentMoveState = MoveState.Jump;
+                return;
+            }
+
+            // 점프 입력
+            if (Input.GetKeyDown(KeyCode.K))
+            {
+                Jump();
+                return;
+            }
+
+            // 앉기 입력 
+            if (Input.GetKey(KeyCode.S))
+            {
+                if (horizontalInput != 0f)
+                {
+                    currentMoveState = MoveState.CrouchMove;
+                }
+                else
                 {
                     currentMoveState = MoveState.Crouch;
                 }
-
-                else if (Input.GetKey(KeyCode.S) && (Input.GetKey(KeyCode.A)) || (Input.GetKey(KeyCode.D)))
-                {
-                    currentMoveState = MoveState.CrouchMove;
-
-
-                }
-
-                else if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D) && currentMoveState != MoveState.CrouchMove)
-                {
-                    currentMoveState = MoveState.Run;
-                }
-
-                else
-                {
-
-                    currentMoveState = MoveState.Idle;
-                }
             }
+            // 서서 이동
+            else if (horizontalInput != 0f)
+            {
+                currentMoveState = MoveState.Run;
+            }
+            // 아무것도 안 누름
+            else
+            {
+                currentMoveState = MoveState.Idle;
+            }
+        }
 
-            if (Input.GetKey(KeyCode.W))
+        void UpdateAimState()
+        {
+            bool isCrouching = (currentMoveState == MoveState.Crouch || currentMoveState == MoveState.CrouchMove);
+
+            if (!isCrouching && Input.GetKey(KeyCode.W))
             {
                 currentAimState = AimState.Up;
             }
-            else if (Input.GetKey(KeyCode.S))  //점프중일때 S로 아래조준, 점프중이 아닐때는 정면 조준 유지
+            else if (Input.GetKey(KeyCode.S) && !isGrounded)
             {
-                if (currentMoveState == MoveState.Jump)
-                {
-                    currentAimState = AimState.Down;
-                }
-                else
-                {
-                    currentAimState = AimState.Forward;
-                }
+                currentAimState = AimState.Down;
             }
             else
             {
                 currentAimState = AimState.Forward;
             }
-
-            if (Input.GetKeyDown(KeyCode.K) && currentMoveState != MoveState.Jump)
-            {
-                currentMoveState = MoveState.Jump;
-
-            }
         }
 
-        void StateAction() //입력받은 상태를 기반으로 실제 행동을 실행
+        void ApplyMovement()
         {
-            if (currentMoveState == MoveState.Run || currentMoveState == MoveState.Jump && currentMoveState != MoveState.CrouchMove)
-            {
-                if (Input.GetKey(KeyCode.A))
-                {
-                    moveSpeed = 3.0f;
-                    transform.Translate(Vector3.left * moveSpeed * Time.deltaTime);
-                }
-
-                if (Input.GetKey(KeyCode.D))
-                {
-                    moveSpeed = 3.0f;
-                    transform.Translate(Vector3.right * moveSpeed * Time.deltaTime);
-                }
-            }
-
+            float currentSpeed = moveSpeed;
             if (currentMoveState == MoveState.CrouchMove)
             {
-                if (Input.GetKey(KeyCode.S) && (Input.GetKey(KeyCode.A)))
-                {
-                    moveSpeed = 2.0f;
-                    transform.Translate(Vector3.left * moveSpeed * Time.deltaTime);
-                }
-
-                if (Input.GetKey(KeyCode.S) && (Input.GetKey(KeyCode.D)))
-                {
-                    moveSpeed = 2.0f;
-                    transform.Translate(Vector3.right * moveSpeed * Time.deltaTime);
-                }
+                currentSpeed *= 0.5f;
             }
 
-            if (currentMoveState == MoveState.Jump)
+            // 이동이 없는 상태면 입력값을 0으로 강제
+            float finalInput = horizontalInput;
+            if (currentMoveState == MoveState.Idle || currentMoveState == MoveState.Crouch)
             {
-                if (Input.GetKeyDown(KeyCode.K))
-                {
-                    Jump();
-                }
-
+                finalInput = 0f;
             }
+
+            // 수평 입력이 -1이되면 X축의 음수 방면으로 현재 속도로 이동, 수평입력이 1이되면 X축의 양수 방면으로 현재 속도로 이동.
+            rb.velocity = new Vector3(finalInput * currentSpeed, rb.velocity.y, 0); 
         }
 
-        public void Jump()
+        void Jump()
         {
-            rb.AddForce(Vector3.up, ForceMode.Impulse);
+            rb.velocity = new Vector3(rb.velocity.x, 0, 0);
+            rb.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
+            currentMoveState = MoveState.Jump;
         }
-
     }
 }
-
-
-
-
