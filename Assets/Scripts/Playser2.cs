@@ -28,7 +28,7 @@ namespace Scripts.Player2
         public float moveSpeed = 3.0f;
         public float jumpPower = 5f;
 
-        [Header("지면체크")]
+        [Header("지면체크 설정")]
         public float groundCheckDistance = 1f;
         public LayerMask GroundLayer;
         public bool isGrounded;
@@ -58,9 +58,9 @@ namespace Scripts.Player2
 
         void CheckGround()
         {
-            Vector3 rayOrigin = transform.position + Vector3.up * 0.1f;
-            isGrounded = Physics.Raycast(rayOrigin, Vector3.down, groundCheckDistance, GroundLayer);
-            Debug.DrawRay(rayOrigin, Vector3.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
+            RaycastHit hit;
+            isGrounded = Physics.Raycast(transform.position, Vector3.down, out hit, groundCheckDistance, GroundLayer);
+            Debug.DrawRay(transform.position, Vector3.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
         }
 
         void StateInput()
@@ -127,7 +127,10 @@ namespace Scripts.Player2
         void ApplyMovement()
         {
             float currentSpeed = moveSpeed;
-            if (currentMoveState == MoveState.CrouchMove) currentSpeed = moveSpeed * 0.5f;
+            if (currentMoveState == MoveState.CrouchMove)
+            {
+                currentSpeed *= 0.5f;
+            }
 
             // 이동이 없는 상태면 입력값을 0으로 강제
             float finalInput = horizontalInput;
@@ -136,7 +139,8 @@ namespace Scripts.Player2
                 finalInput = 0f;
             }
 
-            rb.velocity = new Vector3(finalInput * currentSpeed, rb.velocity.y, 0);
+            // 수평 입력이 -1이되면 X축의 음수 방면으로 현재 속도로 이동, 수평입력이 1이되면 X축의 양수 방면으로 현재 속도로 이동.
+            rb.velocity = new Vector3(finalInput * currentSpeed, rb.velocity.y, 0); 
         }
 
         void Jump()
