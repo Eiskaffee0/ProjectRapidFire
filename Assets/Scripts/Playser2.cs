@@ -33,15 +33,27 @@ namespace Scripts.Player2
         public LayerMask GroundLayer;
         public bool isGrounded;
 
+        [Header("무기 설정")]
+        public Transform firePoint;
+        public GameObject pistolBulletPrefab;
+
         // 상태 변수
         public MoveState currentMoveState = MoveState.Idle;
         public AimState currentAimState = AimState.Forward;
 
+        // 이동상태 플래그
         private float horizontalInput = 0f;
+
+        // 기본 지향 방향 플래그
+        private float facingDirection = 1f;
+
+        // 현재 장착 무기
+        private IWeapon currentWeapon;
 
         void Awake()
         {
             rb = GetComponent<Rigidbody>();
+            EquipWeapon(new Pistol());
         }
 
         void Update()
@@ -49,6 +61,7 @@ namespace Scripts.Player2
             CheckGround();
             StateInput();
             UpdateAimState();
+            InputFire();
         }
 
         void FixedUpdate()
@@ -68,6 +81,11 @@ namespace Scripts.Player2
             horizontalInput = 0f;
             if (Input.GetKey(KeyCode.A)) horizontalInput = -1f;
             if (Input.GetKey(KeyCode.D)) horizontalInput = 1f;
+
+            if (horizontalInput != 0f) // 이동키와 바라보는 방향의 동기화.
+            {
+                facingDirection = horizontalInput;
+            }
 
             if (!isGrounded)
             {
@@ -140,7 +158,7 @@ namespace Scripts.Player2
             }
 
             // 수평 입력이 -1이되면 X축의 음수 방면으로 현재 속도로 이동, 수평입력이 1이되면 X축의 양수 방면으로 현재 속도로 이동.
-            rb.velocity = new Vector3(finalInput * currentSpeed, rb.velocity.y, 0); 
+            rb.velocity = new Vector3(finalInput * currentSpeed, rb.velocity.y, 0);
         }
 
         void Jump()
@@ -148,6 +166,39 @@ namespace Scripts.Player2
             rb.velocity = new Vector3(rb.velocity.x, 0, 0);
             rb.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
             currentMoveState = MoveState.Jump;
+        }
+
+        void InputFire()
+        {
+            if (Input.GetKeyDown(KeyCode.J))
+            {
+                if (currentWeapon != null && firePoint != null)
+                {
+                    currentWeapon.Fire(firePoint, currentAimState, facingDirection);
+                }
+
+                else if (firePoint == null)
+                {
+                    Debug.Log("firePoint가 설정되지 않았습니다.");
+                }
+            }
+
+            //테스트용 무기 교체기능
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                EquipWeapon(new Pistol());
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                EquipWeapon(new HMachinegun());
+            }
+        }
+
+        public void EquipWeapon(IWeapon newWeapon)
+        {
+            currentWeapon = newWeapon;
+            Debug.Log("무기교체 성공");
         }
     }
 }
