@@ -1,18 +1,27 @@
-using Scripts.Player2;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static Scripts.Player2.Player2;
-public class Pistol : IWeapon
+namespace Scripts.Player2
 {
-    public void Fire(Transform firePoint, Player2.AimState aimState, float facingDirection)
+    public class Pistol : IWeapon
     {
-        GameObject bullet = BulletPool.Instance.GetPistolBullet();
+        public float fireRate = 0.1f;
+        public float nextFireTime = 0f;
+        public void Fire(Player2 player,Transform firePoint, Player2.AimState aimState, float facingDirection)
+        {
+            if (Time.time < nextFireTime)
+            {
+                return;
+            }
 
-        bullet.transform.position = firePoint.position;
-        bullet.transform.rotation = firePoint.rotation;
+            nextFireTime = Time.time + fireRate;
 
-        Debug.Log("피스톨 발사!");
+            GameObject bullet = BulletPool.Instance.GetPistolBullet();
+            bullet.transform.position = firePoint.position;
+            bullet.transform.rotation = firePoint.rotation;
+
+            Debug.Log("피스톨 발사!");
+        }
     }
 }
 

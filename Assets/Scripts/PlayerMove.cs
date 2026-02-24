@@ -1,115 +1,118 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-public class PlayerMove : MonoBehaviour
+namespace Scripts.PlayerMove
 {
-    float speed;
-    public float jumpForce = 7f;
-    public float verticalVelocity;
-    public bool isGrounded = true;
-    private Vector3 originalScale;
-    private bool isCrouching = false;
-    private bool facingRight = true;
-
-    //  ÃÑ¾Ë °ü·Ã º¯¼ö
-    public GameObject bulletPrefab;   // ÃÑ¾Ë ÇÁ¸®ÆÕ
-    public Transform firePoint;       // ÃÑ¾Ë ¹ß»ç À§Ä¡
-    public float bulletSpeed = 15f;   // ÃÑ¾Ë ¼Óµµ
-
-    private Vector3 shootDirection = Vector3.right; // ±âº» ¹æÇâ
-
-    void Start()
+    public class PlayerMove : MonoBehaviour
     {
-        speed = 10f;
-        originalScale = transform.localScale;
-    }
+        float speed;
+        public float jumpForce = 7f;
+        public float verticalVelocity;
+        public bool isGrounded = true;
+        private Vector3 originalScale;
+        private bool isCrouching = false;
+        private bool facingRight = true;
 
-    void Update()
-    {
-        // ÁÂ¿ì ÀÌµ¿
-        if (Input.GetKey(KeyCode.A))
-        {
-            transform.Translate(Vector3.left * speed * Time.deltaTime);
+        //  ì´ì•Œ ê´€ë ¨ ë³€ìˆ˜
+        public GameObject bulletPrefab;   // ì´ì•Œ í”„ë¦¬íŒ¹
+        public Transform firePoint;       // ì´ì•Œ ë°œì‚¬ ìœ„ì¹˜
+        public float bulletSpeed = 15f;   // ì´ì•Œ ì†ë„
 
-            if (facingRight)
-            {
-                facingRight = false;
-                transform.localScale = new Vector3(-originalScale.x, transform.localScale.y, transform.localScale.z);
-            }
-            shootDirection = Vector3.left; // ¿ŞÂÊ ¹æÇâÀ¸·Î ÃÑ¾Ë
-        }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            transform.Translate(Vector3.right * speed * Time.deltaTime);
+        private Vector3 shootDirection = Vector3.right; // ê¸°ë³¸ ë°©í–¥
 
-            if (!facingRight)
-            {
-                facingRight = true;
-                transform.localScale = new Vector3(originalScale.x, transform.localScale.y, transform.localScale.z);
-            }
-            shootDirection = Vector3.right; // ¿À¸¥ÂÊ ¹æÇâÀ¸·Î ÃÑ¾Ë
-        }
-
-        // À§/¾Æ·¡ ¹æÇâ ÀÔ·Â
-        if (Input.GetKey(KeyCode.W))
+        void Start()
         {
-            shootDirection = Vector3.up; // À§·Î ÃÑ¾Ë
-        }
-        else if (Input.GetKey(KeyCode.S) && !isCrouching)
-        {
-            shootDirection = Vector3.down; // ¾Æ·¡·Î ÃÑ¾Ë
-        }
-
-        // Á¡ÇÁ
-        if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
-        {
-            verticalVelocity = jumpForce;
-            isGrounded = false;
-        }
-
-        // Áß·Â Àû¿ë
-        if (!isGrounded)
-        {
-            verticalVelocity += Physics.gravity.y * Time.deltaTime;
-            transform.Translate(Vector3.up * verticalVelocity * Time.deltaTime);
-
-            if (transform.position.y <= 0f)
-            {
-                transform.position = new Vector3(transform.position.x, 0f, transform.position.z);
-                verticalVelocity = 0f;
-                isGrounded = true;
-            }
-        }
-
-        // ¾É±â
-        if (Input.GetKeyDown(KeyCode.S) && !isCrouching)
-        {
-            transform.localScale = new Vector3(transform.localScale.x, originalScale.y * 0.5f, originalScale.z);
-            speed = 5f;
-            isCrouching = true;
-        }
-        else if (Input.GetKeyUp(KeyCode.S) && isCrouching)
-        {
-            transform.localScale = new Vector3(transform.localScale.x, originalScale.y, originalScale.z);
             speed = 10f;
-            isCrouching = false;
+            originalScale = transform.localScale;
         }
 
-        //  ÃÑ¾Ë ¹ß»ç (¸¶¿ì½º ¿ŞÂÊ Å¬¸¯)
-        if (Input.GetMouseButtonDown(0))
+        void Update()
         {
-            Shoot();
-        }
-    }
+            // ì¢Œìš° ì´ë™
+            if (Input.GetKey(KeyCode.A))
+            {
+                transform.Translate(Vector3.left * speed * Time.deltaTime);
 
-    void Shoot()
-    {
-        GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
-        Rigidbody rb = bullet.GetComponent<Rigidbody>();
-        rb.velocity = shootDirection * bulletSpeed;
+                if (facingRight)
+                {
+                    facingRight = false;
+                    transform.localScale = new Vector3(-originalScale.x, transform.localScale.y, transform.localScale.z);
+                }
+                shootDirection = Vector3.left; // ì™¼ìª½ ë°©í–¥ìœ¼ë¡œ ì´ì•Œ
+            }
+            else if (Input.GetKey(KeyCode.D))
+            {
+                transform.Translate(Vector3.right * speed * Time.deltaTime);
+
+                if (!facingRight)
+                {
+                    facingRight = true;
+                    transform.localScale = new Vector3(originalScale.x, transform.localScale.y, transform.localScale.z);
+                }
+                shootDirection = Vector3.right; // ì˜¤ë¥¸ìª½ ë°©í–¥ìœ¼ë¡œ ì´ì•Œ
+            }
+
+            // ìœ„/ì•„ë˜ ë°©í–¥ ì…ë ¥
+            if (Input.GetKey(KeyCode.W))
+            {
+                shootDirection = Vector3.up; // ìœ„ë¡œ ì´ì•Œ
+            }
+            else if (Input.GetKey(KeyCode.S) && !isCrouching)
+            {
+                shootDirection = Vector3.down; // ì•„ë˜ë¡œ ì´ì•Œ
+            }
+
+            // ì í”„
+            if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+            {
+                verticalVelocity = jumpForce;
+                isGrounded = false;
+            }
+
+            // ì¤‘ë ¥ ì ìš©
+            if (!isGrounded)
+            {
+                verticalVelocity += Physics.gravity.y * Time.deltaTime;
+                transform.Translate(Vector3.up * verticalVelocity * Time.deltaTime);
+
+                if (transform.position.y <= 0f)
+                {
+                    transform.position = new Vector3(transform.position.x, 0f, transform.position.z);
+                    verticalVelocity = 0f;
+                    isGrounded = true;
+                }
+            }
+
+            // ì•‰ê¸°
+            if (Input.GetKeyDown(KeyCode.S) && !isCrouching)
+            {
+                transform.localScale = new Vector3(transform.localScale.x, originalScale.y * 0.5f, originalScale.z);
+                speed = 5f;
+                isCrouching = true;
+            }
+            else if (Input.GetKeyUp(KeyCode.S) && isCrouching)
+            {
+                transform.localScale = new Vector3(transform.localScale.x, originalScale.y, originalScale.z);
+                speed = 10f;
+                isCrouching = false;
+            }
+
+            //  ì´ì•Œ ë°œì‚¬ (ë§ˆìš°ìŠ¤ ì™¼ìª½ í´ë¦­)
+            if (Input.GetMouseButtonDown(0))
+            {
+                Shoot();
+            }
+        }
+
+        void Shoot()
+        {
+            GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
+            Rigidbody rb = bullet.GetComponent<Rigidbody>();
+            rb.velocity = shootDirection * bulletSpeed;
+        }
     }
 }
+
 
 
 

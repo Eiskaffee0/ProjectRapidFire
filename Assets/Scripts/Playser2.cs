@@ -37,6 +37,11 @@ namespace Scripts.Player2
         public Transform firePoint;
         public GameObject pistolBulletPrefab;
 
+        [Header("무기 위치 설정")]
+        public Transform rightSocket; // 캐릭터가 오른쪽 방향일 때 무기위치
+        public Transform leftSocket; // 캐릭터가 왼쪽 방향일 때 무기위치
+        public Transform weaponArm; // 현재 무기를 들고있는 팔
+
         // 상태 변수
         public MoveState currentMoveState = MoveState.Idle;
         public AimState currentAimState = AimState.Forward;
@@ -60,6 +65,7 @@ namespace Scripts.Player2
         {
             CheckGround();
             StateInput();
+            UpdateFacingDirection();
             UpdateAimState();
             InputFire();
         }
@@ -142,6 +148,30 @@ namespace Scripts.Player2
             }
         }
 
+        void UpdateFacingDirection()
+        {
+            if (horizontalInput > 0f)
+            {
+                transform.rotation = Quaternion.Euler(0, 0, 0);
+
+                if (weaponArm != null && rightSocket != null && weaponArm.parent != rightSocket)
+                {
+                    weaponArm.SetParent(rightSocket);
+                    weaponArm.localPosition = Vector3.zero;
+                }
+            }
+
+            else if (horizontalInput < 0f)
+            {
+                transform.rotation = Quaternion.Euler(0, 180, 0);
+
+                if (weaponArm != null && leftSocket != null && weaponArm != leftSocket)
+                {
+                    weaponArm.SetParent(leftSocket);
+                    weaponArm.localPosition = Vector3.zero;
+                }
+            }
+        }
         void ApplyMovement()
         {
             float currentSpeed = moveSpeed;
@@ -170,11 +200,11 @@ namespace Scripts.Player2
 
         void InputFire()
         {
-            if (Input.GetKeyDown(KeyCode.J))
+            if (Input.GetKey(KeyCode.J))
             {
                 if (currentWeapon != null && firePoint != null)
                 {
-                    currentWeapon.Fire(firePoint, currentAimState, facingDirection);
+                    currentWeapon.Fire(this, firePoint, currentAimState, facingDirection);
                 }
 
                 else if (firePoint == null)
