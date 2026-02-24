@@ -1,13 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static Scripts.Player2.Player2;
 
-
-public interface IWeapon
+namespace Scripts.Player2
 {
-    void Fire(Transform firePoint, AimState aimState, float facingDirection);
+    public interface IWeapon
+    {
+        void Fire(Player2 player, Transform firePoint, Player2.AimState aimState, float facingDirection);
+    }
 }
-
-
-

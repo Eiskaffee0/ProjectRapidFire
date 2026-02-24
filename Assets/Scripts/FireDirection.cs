@@ -8,7 +8,7 @@ namespace Scripts.Player2
         public Player2 player;
 
         [Header("회전속도 설정")]
-        public float rotationSpeed = 720f;
+        public float rotationSpeed = 600f;
         public float currentAngle = 0f;
         void Update()
         {

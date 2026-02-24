@@ -200,11 +200,11 @@ namespace Scripts.Player2
 
         void InputFire()
         {
-            if (Input.GetKeyDown(KeyCode.J))
+            if (Input.GetKey(KeyCode.J))
             {
                 if (currentWeapon != null && firePoint != null)
                 {
-                    currentWeapon.Fire(firePoint, currentAimState, facingDirection);
+                    currentWeapon.Fire(this, firePoint, currentAimState, facingDirection);
                 }
 
                 else if (firePoint == null)
