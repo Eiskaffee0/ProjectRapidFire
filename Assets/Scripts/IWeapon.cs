@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Scripts.Players;
 
-namespace Scripts.Player2
+namespace Scripts.Interfaces
 {
     public interface IWeapon
     {

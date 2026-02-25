@@ -1,7 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-namespace Scripts.Player2
+using Scripts.Interfaces;
+namespace Scripts.Objs
 {
     public class DistructiableObj : MonoBehaviour, IDamageable
     {

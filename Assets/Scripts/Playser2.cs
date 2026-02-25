@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-namespace Scripts.Player2
+using Scripts.Interfaces;
+using Scripts.Weapons;
+namespace Scripts.Players
 {
-    public class Player2 : MonoBehaviour
+    public class Player2 : MonoBehaviour, IDamageable
     {
         Rigidbody rb;
 
@@ -27,6 +29,9 @@ namespace Scripts.Player2
         [Header("플레이어 설정")]
         public float moveSpeed = 3.0f;
         public float jumpPower = 5f;
+        [Header("플레이어 목숨 관련")]
+        public int startingLives = 3;
+        public int currentLives;
 
         [Header("지면체크 설정")]
         public float groundCheckDistance = 1f;
@@ -59,6 +64,7 @@ namespace Scripts.Player2
         {
             rb = GetComponent<Rigidbody>();
             EquipWeapon(new Pistol());
+            currentLives = startingLives;
         }
 
         void Update()
@@ -73,6 +79,30 @@ namespace Scripts.Player2
         void FixedUpdate()
         {
             ApplyMovement();
+        }
+
+        public void TakeDamage(float damage)
+        {
+            Die();
+        }
+
+        public void Die()
+        {
+            currentLives--;
+
+            Debug.Log($"사망, 남은 목숨: {currentLives}");
+
+            if (currentLives > 0) //목숨이 남아있다면 당연히 새로운 플레이어를 스폰
+            {
+                Debug.Log("게임매니저에게 새로운 플레이어의 스폰을 요청");
+                Destroy(gameObject);
+            }
+
+            else
+            {
+                Debug.Log("게임 오버");
+                Destroy(gameObject);
+            }
         }
 
         void CheckGround()
