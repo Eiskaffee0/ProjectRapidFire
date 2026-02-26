@@ -5,7 +5,7 @@ namespace Scripts.Players
 {
     public class FireDirection : MonoBehaviour
     {
-        public Player2 player;
+        public Player player;
 
         [Header("회전속도 설정")]
         public float rotationSpeed = 600f;
@@ -24,12 +24,12 @@ namespace Scripts.Players
         {
             float targetAngle = 0f;
 
-            if (player.currentAimState == Player2.AimState.Up)
+            if (player.currentAimState == Player.AimState.Up)
             {
                 targetAngle = 180f;
             }
 
-            else if (player.currentAimState == Player2.AimState.Down)
+            else if (player.currentAimState == Player.AimState.Down)
             {
                 targetAngle = 0f;
             }

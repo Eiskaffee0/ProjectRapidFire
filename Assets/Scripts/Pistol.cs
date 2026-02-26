@@ -11,7 +11,7 @@ namespace Scripts.Weapons
     {
         public float fireRate = 0.1f;
         public float nextFireTime = 0f;
-        public void Fire(Player2 player,Transform firePoint, Player2.AimState aimState, float facingDirection)
+        public void Fire(Player player,Transform firePoint, Player.AimState aimState, float facingDirection)
         {
             if (Time.time < nextFireTime)
             {

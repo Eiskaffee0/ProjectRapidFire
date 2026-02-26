@@ -14,7 +14,7 @@ namespace Scripts.Weapons
 
         private bool isFiring = false;
 
-        public void Fire(Player2 player, Transform firePoint, Player2.AimState aimState, float facingDirection)
+        public void Fire(Player player, Transform firePoint, Player.AimState aimState, float facingDirection)
         {
             if (isFiring)
             {
@@ -24,7 +24,7 @@ namespace Scripts.Weapons
             player.StartCoroutine(BurstFire(player, firePoint));
         }
 
-        private IEnumerator BurstFire(Player2 player, Transform firePoint)
+        private IEnumerator BurstFire(Player player, Transform firePoint)
         {
             isFiring = true;
 

@@ -7,6 +7,6 @@ namespace Scripts.Interfaces
 {
     public interface IWeapon
     {
-        void Fire(Player2 player, Transform firePoint, Player2.AimState aimState, float facingDirection);
+        void Fire(Player player, Transform firePoint, Player.AimState aimState, float facingDirection);
     }
 }

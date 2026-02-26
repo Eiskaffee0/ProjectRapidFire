@@ -7,7 +7,7 @@ using Scripts.Interfaces;
 using Scripts.Weapons;
 namespace Scripts.Players
 {
-    public class Player2 : MonoBehaviour, IDamageable
+    public class Player : MonoBehaviour, IDamageable
     {
         Rigidbody rb;
 

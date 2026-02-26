@@ -14,7 +14,7 @@ namespace Scripts.Managers
         }
 
         [Header("플레이어 데이터")]
-        public Player2 player;
+        public Player player;
         public GameObject PlayerPrefab;
 
         [Header("부활설정")]
@@ -87,7 +87,7 @@ namespace Scripts.Managers
 
             GameObject newPlayerObj = Instantiate(PlayerPrefab, spawnPos, Quaternion.identity);
 
-            player = newPlayerObj.GetComponent<Player2>();
+            player = newPlayerObj.GetComponent<Player>();
 
             player.StartInvincibility();
         }
