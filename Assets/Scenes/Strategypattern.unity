@@ -243,7 +243,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a093c607ef65a3c489194f3b62abeb66, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player: {fileID: 1145696045}
+  player: {fileID: 0}
   rotationSpeed: 500
   currentAngle: 0
 --- !u!1 &619245777
@@ -639,23 +639,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 1145696038}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 50dd854dafaf4f64dabc0377923d5906, type: 3}
+  m_Script: {fileID: 11500000, guid: dd31e9c5aaf127d4fbffb8b6689b903d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 3
-  jumpPower: 5
-  groundCheckDistance: 1
-  GroundLayer:
-    serializedVersion: 2
-    m_Bits: 64
-  isGrounded: 0
-  firePoint: {fileID: 619245778}
-  pistolBulletPrefab: {fileID: 0}
-  rightSocket: {fileID: 2061247440}
-  leftSocket: {fileID: 873366680}
-  weaponArm: {fileID: 398205947}
-  currentMoveState: 0
-  currentAimState: 0
+  moveSpeed: 8
+  crouchSpeed: 4
+  jumpForce: 12
+  bulletPrefab: {fileID: 0}
+  firePoint: {fileID: 0}
+  bulletSpeed: 20
 --- !u!1 &1166131789
 GameObject:
   m_ObjectHideFlags: 0
