@@ -42,7 +42,7 @@ namespace Scripts.Players
 
         [Header("무기 설정")]
         public Transform firePoint;
-        public GameObject pistolBulletPrefab;
+       
 
         [Header("무기 위치 설정")]
         public Transform rightSocket; // 캐릭터가 오른쪽 방향일 때 무기위치
