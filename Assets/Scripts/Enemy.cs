@@ -25,12 +25,14 @@ namespace Scripts.Enemies
         public float readyTime = 1f;
 
         public float attackRate = 1.5f; //공격빈도 설정
-        public float nextAttackTime = 0f;
+        public float attackTimer = 100f;
+        public float moveSpeed = 2f;
+
 
         public GameObject enemyBulletPrefab; //몬스터의 투사체 프리팹
         public Transform firePoint; // 몬스터 투사체의 발사 위치
 
-        public Transform playerTransform;
+        public Transform playerTransform; //플레이어를 추적하기 위한 플레이어 위치값
         public bool isPreparing = false;
 
         void Start()
@@ -51,6 +53,19 @@ namespace Scripts.Enemies
             if (currentState == State.Dead)
             {
                 return;
+            }
+
+            if (playerTransform == null)
+            {
+                if (Scripts.Managers.GameManager.Instance != null && Scripts.Managers.GameManager.Instance.player != null)
+                {
+                    playerTransform = Scripts.Managers.GameManager.Instance.player.transform;
+                }
+
+                else
+                {
+                    return;
+                }
             }
 
             UpdateFacingDirection();
@@ -132,14 +147,18 @@ namespace Scripts.Enemies
 
             if (distance > attackRange)
             {
-                ChangeState(State.Idle);
-                return;
+                Vector3 targetPos = new Vector3(playerTransform.position.x, transform.position.y, transform.position.z);
+                transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
             }
 
-            if (Time.time >= nextAttackTime)
+            else
             {
-                Attack();
-                nextAttackTime = Time.time + attackRate;
+                attackTimer += Time.deltaTime;
+                if (attackTimer >= attackRate)
+                {
+                    Attack();
+                    attackTimer = 0f;
+                }
             }
         }
 
