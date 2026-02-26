@@ -645,8 +645,9 @@ MonoBehaviour:
   moveSpeed: 8
   crouchSpeed: 4
   jumpForce: 12
-  bulletPrefab: {fileID: 0}
-  firePoint: {fileID: 0}
+  bulletPrefab: {fileID: 7778722169568039366, guid: 8bcc32faa9298c64b8d0dff497e67676,
+    type: 3}
+  firePoint: {fileID: 619245778}
   bulletSpeed: 20
 --- !u!1 &1166131789
 GameObject:

@@ -57,11 +57,11 @@ namespace Scripts.Players
             // X축 이동 (속도 변경)
             rb.velocity = new Vector3(moveInput * currentSpeed, rb.velocity.y, 0);
 
-            // 캐릭터 방향 회전 (오른쪽: 90도, 왼쪽: -90도)
+            // 캐릭터 방향 회전 (오른쪽: 0도, 왼쪽: 180도)
             if (moveInput > 0)
-                transform.rotation = Quaternion.Euler(0, 90, 0);
+                transform.rotation = Quaternion.Euler(0, 0, 0);
             else if (moveInput < 0)
-                transform.rotation = Quaternion.Euler(0, -90, 0);
+                transform.rotation = Quaternion.Euler(0, 180, 0);
         }
 
         void HandleJump()
