@@ -1,7 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-namespace Scripts.Player2
+using Scripts.Pools;
+using Scripts.Players;
+using Scripts.Interfaces;
+namespace Scripts.Weapons
+
 {
     public class Pistol : IWeapon
     {
@@ -17,7 +21,7 @@ namespace Scripts.Player2
             nextFireTime = Time.time + fireRate;
 
             GameObject bullet = BulletPool.Instance.GetPistolBullet();
-            bullet.transform.position = firePoint.position;
+            bullet.transform.position = new Vector3(firePoint.position.x, firePoint.position.y, player.transform.position.z);
             bullet.transform.rotation = firePoint.rotation;
 
             Debug.Log("피스톨 발사!");

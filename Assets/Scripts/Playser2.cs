@@ -3,9 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.Universal;
-namespace Scripts.Player2
+using Scripts.Interfaces;
+using Scripts.Weapons;
+namespace Scripts.Players
 {
-    public class Player2 : MonoBehaviour
+    public class Player2 : MonoBehaviour, IDamageable
     {
         Rigidbody rb;
 
@@ -27,6 +29,11 @@ namespace Scripts.Player2
         [Header("플레이어 설정")]
         public float moveSpeed = 3.0f;
         public float jumpPower = 5f;
+        [Header("플레이어 리스폰 관련")]
+        public bool isInvincible = false;
+        public float invincibilityDuration = 3f;
+        public float blinkInterval = 0.15f;
+        public Renderer[] playerRenderers;
 
         [Header("지면체크 설정")]
         public float groundCheckDistance = 1f;
@@ -59,6 +66,7 @@ namespace Scripts.Player2
         {
             rb = GetComponent<Rigidbody>();
             EquipWeapon(new Pistol());
+
         }
 
         void Update()
@@ -73,6 +81,90 @@ namespace Scripts.Player2
         void FixedUpdate()
         {
             ApplyMovement();
+            ClampPositionToScreen();
+        }
+
+        void ClampPositionToScreen()
+        {
+            if (Scripts.Managers.GameManager.Instance == null)
+            {
+                return;
+            }
+
+            //플레이어의 두꼐를 고여한 여백(화면 끝에 완전 딱 붙기전에 멈추도록. 만약 필요 없다면 삭제
+            float playerWidthOffset = 0.5f;
+
+            //화면 왼쪽 끝 좌표.
+            float leftEdge = Scripts.Managers.GameManager.Instance.GetScreenEdgeX(false) + playerWidthOffset;
+
+            //현재 내 X좌표가 왼쪽 끝보다 작으면(뒤로 가려고한다면) 강제로 막음
+            float clampedX = Mathf.Max(transform.position.x, leftEdge);
+
+            //만약 보스전처럼 스크롤이 완전 잠긴 상황이라면 오른쪽으로도 못나가게 막기
+            if (Scripts.Managers.GameManager.Instance.isScrollLocked)
+            {
+                float rightEdge = Scripts.Managers.GameManager.Instance.GetScreenEdgeX(true) - playerWidthOffset;
+                clampedX = Mathf.Clamp(clampedX, leftEdge, rightEdge);
+            }
+
+            transform.position = new Vector3(clampedX, transform.position.y, transform.position.z);
+
+
+        }
+        public void TakeDamage(float damage)
+        {
+            if (isInvincible)
+            {
+                return;
+            }
+
+            Die();
+        }
+
+        public void Die()
+        {
+            if (Scripts.Managers.GameManager.Instance != null)
+            {
+                Scripts.Managers.GameManager.Instance.OnPlayerDied(transform.position);
+            }
+
+            Destroy(gameObject);
+        }
+
+        public void StartInvincibility()
+        {
+            StartCoroutine(InvincibilityRoutine());
+        }
+
+        public IEnumerator InvincibilityRoutine()
+        {
+            isInvincible = true;
+            Debug.Log("무적상태 진입");
+
+            if (playerRenderers == null || playerRenderers.Length == 0)
+            {
+                playerRenderers = GetComponentsInChildren<Renderer>();
+            }
+
+            float timer = 0f;
+
+            while (timer < invincibilityDuration)
+            {
+                foreach (Renderer r in playerRenderers)
+                {
+                    r.enabled = !r.enabled;
+                }
+
+                yield return new WaitForSeconds(blinkInterval);
+                timer += blinkInterval;
+            }
+
+            foreach (Renderer r in playerRenderers)
+            {
+                r.enabled = true;
+            }
+            isInvincible = false;
+            Debug.Log("무적 끝");
         }
 
         void CheckGround()
