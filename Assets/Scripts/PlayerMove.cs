@@ -1,118 +1,139 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-namespace Scripts.PlayerMove
+
+namespace Scripts.Players
 {
+    // Rigidbody ÄÄÆ÷³ÍÆ®°¡ ¹İµå½Ã ÇÊ¿äÇÏµµ·Ï ¼³Á¤
+    [RequireComponent(typeof(Rigidbody))]
     public class PlayerMove : MonoBehaviour
     {
-        float speed;
-        public float jumpForce = 7f;
-        public float verticalVelocity;
-        public bool isGrounded = true;
-        private Vector3 originalScale;
-        private bool isCrouching = false;
-        private bool facingRight = true;
+        [Header("ÀÌµ¿ ¹× Á¡ÇÁ")]
+        public float moveSpeed = 8f;       // ±âº» ÀÌµ¿ ¼Óµµ
+        public float crouchSpeed = 4f;     // ¾É¾ÒÀ» ¶§ ÀÌµ¿ ¼Óµµ
+        public float jumpForce = 12f;      // Á¡ÇÁ Èû
 
-        //  ì´ì•Œ ê´€ë ¨ ë³€ìˆ˜
-        public GameObject bulletPrefab;   // ì´ì•Œ í”„ë¦¬íŒ¹
-        public Transform firePoint;       // ì´ì•Œ ë°œì‚¬ ìœ„ì¹˜
-        public float bulletSpeed = 15f;   // ì´ì•Œ ì†ë„
+        [Header("»ç°İ ¼³Á¤")]
+        public GameObject bulletPrefab;    // ¹ß»çÇÒ ÃÑ¾Ë ÇÁ¸®ÆÕ
+        public Transform firePoint;        // ÃÑ¾Ë ¹ß»ç À§Ä¡
+        public float bulletSpeed = 20f;    // ÃÑ¾Ë ¼Óµµ
 
-        private Vector3 shootDirection = Vector3.right; // ê¸°ë³¸ ë°©í–¥
+        private Rigidbody rb;              // ÇÃ·¹ÀÌ¾îÀÇ Rigidbody
+        private bool isGrounded;           // ¶¥¿¡ ´ê¾ÆÀÖ´ÂÁö ¿©ºÎ
+        private bool isCrouching;          // ¾É¾ÆÀÖ´ÂÁö ¿©ºÎ
+        private Vector3 shootDirection;    // ÃÑ¾Ë ¹ß»ç ¹æÇâ
+        private Vector3 originalScale;     // ¿ø·¡ Ä³¸¯ÅÍ Å©±â ÀúÀå¿ë
 
         void Start()
         {
-            speed = 10f;
-            originalScale = transform.localScale;
+            rb = GetComponent<Rigidbody>();          // Rigidbody °¡Á®¿À±â
+            originalScale = transform.localScale;    // ¿ø·¡ Å©±â ÀúÀå
+
+            // 3D È¯°æ¿¡¼­ È¾½ºÅ©·Ñ °íÁ¤ ¼³Á¤
+            rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionZ;
+            // È¸Àü°ú ZÃà ÀÌµ¿À» ¸·¾Æ 2D È¾½ºÅ©·ÑÃ³·³ µ¿ÀÛ
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            // ¹°¸® º¸°£À¸·Î ¿òÁ÷ÀÓÀ» ºÎµå·´°Ô
         }
 
         void Update()
         {
-            // ì¢Œìš° ì´ë™
-            if (Input.GetKey(KeyCode.A))
-            {
-                transform.Translate(Vector3.left * speed * Time.deltaTime);
+            CheckGround();       // ¶¥¿¡ ´ê¾ÆÀÖ´ÂÁö Ã¼Å©
+            HandleMovement();    // ÀÌµ¿ Ã³¸®
+            HandleJump();        // Á¡ÇÁ Ã³¸®
+            HandleCrouch();      // ¾É±â Ã³¸®
+            HandleAiming();      // Á¶ÁØ ¹æÇâ Ã³¸®
 
-                if (facingRight)
-                {
-                    facingRight = false;
-                    transform.localScale = new Vector3(-originalScale.x, transform.localScale.y, transform.localScale.z);
-                }
-                shootDirection = Vector3.left; // ì™¼ìª½ ë°©í–¥ìœ¼ë¡œ ì´ì•Œ
-            }
-            else if (Input.GetKey(KeyCode.D))
-            {
-                transform.Translate(Vector3.right * speed * Time.deltaTime);
-
-                if (!facingRight)
-                {
-                    facingRight = true;
-                    transform.localScale = new Vector3(originalScale.x, transform.localScale.y, transform.localScale.z);
-                }
-                shootDirection = Vector3.right; // ì˜¤ë¥¸ìª½ ë°©í–¥ìœ¼ë¡œ ì´ì•Œ
-            }
-
-            // ìœ„/ì•„ë˜ ë°©í–¥ ì…ë ¥
-            if (Input.GetKey(KeyCode.W))
-            {
-                shootDirection = Vector3.up; // ìœ„ë¡œ ì´ì•Œ
-            }
-            else if (Input.GetKey(KeyCode.S) && !isCrouching)
-            {
-                shootDirection = Vector3.down; // ì•„ë˜ë¡œ ì´ì•Œ
-            }
-
-            // ì í”„
-            if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
-            {
-                verticalVelocity = jumpForce;
-                isGrounded = false;
-            }
-
-            // ì¤‘ë ¥ ì ìš©
-            if (!isGrounded)
-            {
-                verticalVelocity += Physics.gravity.y * Time.deltaTime;
-                transform.Translate(Vector3.up * verticalVelocity * Time.deltaTime);
-
-                if (transform.position.y <= 0f)
-                {
-                    transform.position = new Vector3(transform.position.x, 0f, transform.position.z);
-                    verticalVelocity = 0f;
-                    isGrounded = true;
-                }
-            }
-
-            // ì•‰ê¸°
-            if (Input.GetKeyDown(KeyCode.S) && !isCrouching)
-            {
-                transform.localScale = new Vector3(transform.localScale.x, originalScale.y * 0.5f, originalScale.z);
-                speed = 5f;
-                isCrouching = true;
-            }
-            else if (Input.GetKeyUp(KeyCode.S) && isCrouching)
-            {
-                transform.localScale = new Vector3(transform.localScale.x, originalScale.y, originalScale.z);
-                speed = 10f;
-                isCrouching = false;
-            }
-
-            //  ì´ì•Œ ë°œì‚¬ (ë§ˆìš°ìŠ¤ ì™¼ìª½ í´ë¦­)
+            // ¸¶¿ì½º ¿ŞÂÊ Å¬¸¯ ½Ã ÃÑ¾Ë ¹ß»ç
             if (Input.GetMouseButtonDown(0))
             {
                 Shoot();
             }
         }
 
+        void HandleMovement()
+        {
+            float moveInput = Input.GetAxisRaw("Horizontal"); // A/D ¶Ç´Â ¡ç/¡æ ÀÔ·Â
+            float currentSpeed = isCrouching ? crouchSpeed : moveSpeed; // ¾ÉÀ¸¸é ¼Óµµ ÁÙÀÌ±â
+
+            // XÃà ÀÌµ¿ (¼Óµµ º¯°æ)
+            rb.velocity = new Vector3(moveInput * currentSpeed, rb.velocity.y, 0);
+
+            // Ä³¸¯ÅÍ ¹æÇâ È¸Àü (¿À¸¥ÂÊ: 90µµ, ¿ŞÂÊ: -90µµ)
+            if (moveInput > 0)
+                transform.rotation = Quaternion.Euler(0, 90, 0);
+            else if (moveInput < 0)
+                transform.rotation = Quaternion.Euler(0, -90, 0);
+        }
+
+        void HandleJump()
+        {
+            // ½ºÆäÀÌ½º ÀÔ·Â + ¶¥¿¡ ÀÖÀ» ¶§¸¸ Á¡ÇÁ °¡´É
+            if (Input.GetKeyDown(KeyCode.Space) && isGrounded)
+            {
+                rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse); // À§·Î ÈûÀ» °¡ÇØ Á¡ÇÁ
+            }
+        }
+
+        void HandleCrouch()
+        {
+            // S Å° ´©¸£¸é ¾É±â
+            if (Input.GetKeyDown(KeyCode.S))
+            {
+                isCrouching = true;
+                // Ä³¸¯ÅÍ Å©±â¸¦ Àı¹İÀ¸·Î ÁÙ¿© ¾ÉÀº »óÅÂ Ç¥Çö
+                transform.localScale = new Vector3(originalScale.x, originalScale.y * 0.5f, originalScale.z);
+            }
+            // S Å° ¶¼¸é ¿ø·¡ Å©±â·Î º¹±Í
+            else if (Input.GetKeyUp(KeyCode.S))
+            {
+                isCrouching = false;
+                transform.localScale = originalScale;
+            }
+        }
+
+        void HandleAiming()
+        {
+            float moveInput = Input.GetAxisRaw("Horizontal");
+
+            // W Å°: À§·Î Á¶ÁØ
+            if (Input.GetKey(KeyCode.W))
+                shootDirection = Vector3.up;
+            // S Å°: ¾Æ·¡·Î Á¶ÁØ
+            else if (Input.GetKey(KeyCode.S))
+                shootDirection = Vector3.down;
+            // ÀÌµ¿ ¹æÇâ¿¡ µû¶ó ÁÂ/¿ì Á¶ÁØ
+            else if (moveInput > 0)
+                shootDirection = Vector3.right;
+            else if (moveInput < 0)
+                shootDirection = Vector3.left;
+        }
+
         void Shoot()
         {
-            GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
-            Rigidbody rb = bullet.GetComponent<Rigidbody>();
-            rb.velocity = shootDirection * bulletSpeed;
+            // ÃÑ¾Ë ÇÁ¸®ÆÕ°ú ¹ß»ç À§Ä¡°¡ ¼³Á¤µÇ¾î ÀÖÀ» ¶§¸¸ ½ÇÇà
+            if (bulletPrefab != null && firePoint != null)
+            {
+                // ÃÑ¾Ë »ı¼º
+                GameObject bullet = Instantiate(bulletPrefab, firePoint.position, Quaternion.identity);
+                Rigidbody bulletRb = bullet.GetComponent<Rigidbody>();
+
+                if (bulletRb != null)
+                {
+                    bulletRb.useGravity = false; // ÃÑ¾ËÀº Áß·Â ¿µÇâ ¾øÀ½
+                    bulletRb.velocity = shootDirection.normalized * bulletSpeed; // ÁöÁ¤µÈ ¹æÇâÀ¸·Î ¹ß»ç
+                }
+
+                Destroy(bullet, 3f); // 3ÃÊ ÈÄ ÃÑ¾Ë ÀÚµ¿ »èÁ¦
+            }
+        }
+
+        void CheckGround()
+        {
+            // ÇÃ·¹ÀÌ¾î ¹ß¹ØÀ¸·Î ·¹ÀÌ¸¦ ½÷¼­ ¶¥ Ã¼Å©
+            // ½ÃÀÛ À§Ä¡: Ä³¸¯ÅÍ Áß½É¿¡¼­ ¾à°£ À§ (0.1)
+            // ¹æÇâ: ¾Æ·¡ÂÊ
+            // ±æÀÌ: 1f ¡æ Ä³¸¯ÅÍ ¹ß¹Ø±îÁö ´ê´ÂÁö È®ÀÎ
+            isGrounded = Physics.Raycast(transform.position + Vector3.up * 0.1f, Vector3.down, 1f);
         }
     }
 }
-
-
-
 
