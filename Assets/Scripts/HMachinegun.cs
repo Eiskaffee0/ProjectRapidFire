@@ -2,7 +2,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-namespace Scripts.Player2
+using Scripts.Pools;
+using Scripts.Players;
+using Scripts.Interfaces;
+namespace Scripts.Weapons
 {
     public class HMachinegun : IWeapon
     {
@@ -18,10 +21,10 @@ namespace Scripts.Player2
                 return;
             }
 
-            player.StartCoroutine(BurstFire(firePoint));
+            player.StartCoroutine(BurstFire(player, firePoint));
         }
 
-        private IEnumerator BurstFire(Transform firePoint)
+        private IEnumerator BurstFire(Player2 player, Transform firePoint)
         {
             isFiring = true;
 
@@ -34,7 +37,7 @@ namespace Scripts.Player2
 
                 GameObject bullet = BulletPool.Instance.GetPistolBullet();
 
-                bullet.transform.position = firePoint.position;
+                bullet.transform.position = new Vector3(firePoint.position.x, firePoint.position.y, player.transform.position.z);
                 bullet.transform.rotation = firePoint.rotation;
 
                 Debug.Log($"헤비머신건 {i + 1}발째 발사");
