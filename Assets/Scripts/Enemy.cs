@@ -1,210 +1,209 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.XR;
 using Scripts.Interfaces;
+using Scripts.Data;
+
 namespace Scripts.Enemies
 {
     public class Enemy : MonoBehaviour, IDamageable
     {
-        public enum State
-        {
-            Idle,
-            Ready,
-            Attack,
-            Dead
-        }
+        public enum State { Sleep, Run, Attack, Dead }
 
-        [Header("몬스터 상태 및 능력치")]
-        public State currentState = State.Idle;
-        public float hp = 1f;
+        [Header("데이터 연결")]
+        public EnemyData enemyData;
 
-        [Header("탐지 및 전투설정")]
-        public float detectionRange = 10f;
-        public float attackRange = 7f;
-        public float readyTime = 1f;
+        [Header("상태 및 무기 연결")]
+        public State currentState = State.Sleep;
+        public Transform firePoint;
 
-        public float attackRate = 1.5f; //공격빈도 설정
-        public float attackTimer = 100f;
-        public float moveSpeed = 2f;
+        [Header("지면 체크 설정")]
+        public LayerMask groundLayer;
+        public float groundCheckDistance = 1.1f;
 
+        [Header("피격 효과 설정")]
+        public Renderer enemyRenderer;
+        public Color hitColor = Color.white;
+        public float flashDuration = 0.05f;
 
-        public GameObject enemyBulletPrefab; //몬스터의 투사체 프리팹
-        public Transform firePoint; // 몬스터 투사체의 발사 위치
-
-        public Transform playerTransform; //플레이어를 추적하기 위한 플레이어 위치값
-        public bool isPreparing = false;
+        private float currentHp;
+        private float attackTimer = 0f;
+        private Rigidbody rb;
+        private bool isGrounded;
+        private Color originalColor;
+        private Coroutine flashCoroutine;
 
         void Start()
         {
-            if (Scripts.Managers.GameManager.Instance != null && Scripts.Managers.GameManager.Instance.player != null)
-            {
-                playerTransform = Scripts.Managers.GameManager.Instance.player.transform;
-            }
+            rb = GetComponent<Rigidbody>();
+            rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ | RigidbodyConstraints.FreezePositionZ;
 
+            if (enemyData != null)
+            {
+                currentHp = enemyData.maxHp;
+                attackTimer = enemyData.attackRate;
+            }
             else
             {
-                Debug.Log("게임메니저 또는 플레이어 참조가 비었습니다.");
+                Debug.LogError("몬스터 데이터(EnemyData)가 할당되지 않았습니다!");
             }
+
+            // 시작할 때 원래 색상을 저장해둡니다.
+            if (enemyRenderer == null)
+            {
+                enemyRenderer = GetComponentInChildren<Renderer>();
+            }
+
+            if (enemyRenderer != null)
+            {
+                originalColor = enemyRenderer.material.color;
+            }
+        }
+
+        private Transform GetCurrentPlayer()
+        {
+            if (Scripts.Managers.GameManager.Instance != null && Scripts.Managers.GameManager.Instance.player != null)
+            {
+                return Scripts.Managers.GameManager.Instance.player.transform;
+            }
+            return null;
         }
 
         void Update()
         {
-            if (currentState == State.Dead)
+            if (currentState == State.Dead || enemyData == null) return;
+
+            if (transform.position.y < -15f)
             {
+                Die();
                 return;
             }
 
-            if (playerTransform == null)
-            {
-                if (Scripts.Managers.GameManager.Instance != null && Scripts.Managers.GameManager.Instance.player != null)
-                {
-                    playerTransform = Scripts.Managers.GameManager.Instance.player.transform;
-                }
+            isGrounded = Physics.Raycast(transform.position, Vector3.down, groundCheckDistance, groundLayer);
 
-                else
-                {
-                    return;
-                }
-            }
+            if (!isGrounded) return;
 
-            UpdateFacingDirection();
+            Transform targetPlayer = GetCurrentPlayer();
+            if (targetPlayer == null) return;
+
+            ArcadeAILogic(targetPlayer);
+            UpdateFacingDirection(targetPlayer);
+        }
+
+        void ArcadeAILogic(Transform target)
+        {
+            float distanceX = Mathf.Abs(target.position.x - transform.position.x);
 
             switch (currentState)
             {
-                case State.Idle:
-                    UpdateIdle();
+                case State.Sleep:
+                    if (distanceX <= enemyData.wakeUpDistanceX) currentState = State.Run;
                     break;
-                case State.Ready:
-                    UpdateReady();
+
+                case State.Run:
+                    if (distanceX <= enemyData.attackRangeX)
+                    {
+                        rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+                        currentState = State.Attack;
+                    }
+                    else
+                    {
+                        float dirX = Mathf.Sign(target.position.x - transform.position.x);
+                        rb.velocity = new Vector3(dirX * enemyData.moveSpeed, rb.velocity.y, 0f);
+                    }
                     break;
+
                 case State.Attack:
-                    UpdateAttack();
+                    if (distanceX > enemyData.attackRangeX)
+                    {
+                        currentState = State.Run;
+                    }
+                    else
+                    {
+                        rb.velocity = new Vector3(0f, rb.velocity.y, 0f);
+                        attackTimer += Time.deltaTime;
+                        if (attackTimer >= enemyData.attackRate)
+                        {
+                            Attack();
+                            attackTimer = 0f;
+                        }
+                    }
                     break;
             }
         }
 
-        void UpdateFacingDirection()
+        void UpdateFacingDirection(Transform target)
         {
-            if (playerTransform == null)
-            {
-                return;
-            }
+            if (currentState == State.Sleep) return;
 
-            if (playerTransform.position.x < transform.position.x)
-            {
+            if (target.position.x < transform.position.x)
                 transform.rotation = Quaternion.Euler(0, 180, 0);
-            }
-
-            else if (playerTransform.position.x > transform.position.x)
-            {
+            else if (target.position.x > transform.position.x)
                 transform.rotation = Quaternion.Euler(0, 0, 0);
-            }
-        }
-
-        void UpdateIdle()
-        {
-            if (playerTransform == null)
-            {
-                return;
-            }
-
-            float distance = Vector3.Distance(transform.position, playerTransform.position); // 플레이어와 몬스터간의 거리 계산
-
-            if (distance <= detectionRange)
-            {
-                ChangeState(State.Ready);
-            }
-        }
-
-        public void UpdateReady()
-        {
-            if (!isPreparing)
-            {
-                StartCoroutine(ReadyRoutine());
-            }
-        }
-
-        public IEnumerator ReadyRoutine()
-        {
-            isPreparing = true;
-            Debug.Log($"몬스터: 전투준비 ({readyTime}초 대기");
-
-            yield return new WaitForSeconds(readyTime);
-
-            ChangeState(State.Attack);
-            isPreparing = false;
-        }
-
-        public void UpdateAttack()
-        {
-            if (playerTransform == null)
-            {
-                return;
-            }
-
-            float distance = Vector3.Distance(transform.position, playerTransform.position);
-
-            if (distance > attackRange)
-            {
-                Vector3 targetPos = new Vector3(playerTransform.position.x, transform.position.y, transform.position.z);
-                transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
-            }
-
-            else
-            {
-                attackTimer += Time.deltaTime;
-                if (attackTimer >= attackRate)
-                {
-                    Attack();
-                    attackTimer = 0f;
-                }
-            }
         }
 
         public void Attack()
         {
-            Debug.Log("몬스터: 공격 개시");
-
-            if (enemyBulletPrefab != null && firePoint != null)
+            if (enemyData.enemyBulletPrefab != null && firePoint != null)
             {
-                GameObject bullet = Instantiate(enemyBulletPrefab, firePoint.position, firePoint.rotation);
+                Instantiate(enemyData.enemyBulletPrefab, firePoint.position, firePoint.rotation);
             }
         }
 
-        public void ChangeState(State newState)
-        {
-            currentState = newState;
-        }
         public void TakeDamage(float damage)
         {
-            if (currentState == State.Dead)
-            {
-                return;
-            }
+            if (currentState == State.Dead) return;
 
-            hp -= damage;
-            Debug.Log($"{damage}만큼 피해를 입었습니다. 남은 체력{hp}");
-            if (hp <= 0f)
+            currentHp -= damage;
+
+            if (currentHp > 0f)
+            {
+                // 체력이 남아있다면 피격 반짝임 효과 실행
+                if (flashCoroutine != null)
+                {
+                    StopCoroutine(flashCoroutine);
+                }
+                flashCoroutine = StartCoroutine(HitFlashRoutine());
+            }
+            else
             {
                 Die();
             }
         }
 
+        private IEnumerator HitFlashRoutine()
+        {
+            if (enemyRenderer != null)
+            {
+                // 지정된 피격 색상으로 변경
+                enemyRenderer.material.color = hitColor;
+
+                // 아주 짧은 시간 대기
+                yield return new WaitForSeconds(flashDuration);
+
+                // 원래 색상으로 복구
+                enemyRenderer.material.color = originalColor;
+            }
+        }
+
         public void Die()
         {
-            Debug.Log("기본몹 사망");
+            currentState = State.Dead;
+
+            if (enemyData != null && enemyData.dropItemPrefab != null)
+            {
+                Instantiate(enemyData.dropItemPrefab, transform.position, Quaternion.identity);
+                Debug.Log("몬스터가 아이템을 드랍했습니다.");
+            }
+
             Destroy(gameObject);
         }
 
-        public void OnDrawGizmosSelected()
+        // 에디터에서 지면 체크 레이캐스트 길이를 시각적으로 확인하기 위한 함수
+        private void OnDrawGizmos()
         {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(transform.position, detectionRange);
-            Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(transform.position, attackRange);
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawLine(transform.position, transform.position + Vector3.down * groundCheckDistance);
         }
     }
 }
-
-

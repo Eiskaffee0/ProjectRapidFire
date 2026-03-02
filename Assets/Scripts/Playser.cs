@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.Rendering.Universal;
 using Scripts.Interfaces;
 using Scripts.Weapons;
+using UnityEngine.SceneManagement;
 namespace Scripts.Players
 {
     public class Player : MonoBehaviour, IDamageable
@@ -36,9 +37,11 @@ namespace Scripts.Players
         public Renderer[] playerRenderers;
 
         [Header("지면체크 설정")]
-        public float groundCheckDistance = 1f;
-        public LayerMask GroundLayer;
         public bool isGrounded;
+        public Vector3 boxSize = new Vector3(0.8f, 0.1f, 0.5f); // 상자의 크기
+        public Vector3 boxOffset = new Vector3(0f, -0.9f, 0f);  // 캐릭터 중심에서 발바닥까지의 오프셋
+        public LayerMask groundLayer; // 바닥으로 인식할 레이어 (Ground)
+
 
         [Header("무기 설정")]
         public Transform firePoint;
@@ -67,6 +70,15 @@ namespace Scripts.Players
             rb = GetComponent<Rigidbody>();
             EquipWeapon(new Pistol());
 
+        }
+
+        void Start()
+        {
+            if (Scripts.Managers.GameManager.Instance != null)
+            {
+                Scripts.Managers.GameManager.Instance.player = this;
+                Debug.Log("매니저에 플레이어 등록 완료");
+            }
         }
 
         void Update()
@@ -169,9 +181,12 @@ namespace Scripts.Players
 
         void CheckGround()
         {
-            RaycastHit hit;
-            isGrounded = Physics.Raycast(transform.position, Vector3.down, out hit, groundCheckDistance, GroundLayer);
-            Debug.DrawRay(transform.position, Vector3.down * groundCheckDistance, isGrounded ? Color.green : Color.red);
+            // 상자를 놔둘 중심 위치 (내 위치 + 발바닥 오프셋)
+            Vector3 centerPos = transform.position + boxOffset;
+
+            // CheckBox 발동! (중심위치, 상자크기의 절반(Half Extents), 캐릭터회전, 바닥레이어)
+            // 지면(Ground Layer)과 1mm라도 겹쳐있으면 무조건 true를 반환함
+            isGrounded = Physics.CheckBox(centerPos, boxSize / 2, transform.rotation, groundLayer);
         }
 
         void StateInput()
@@ -321,6 +336,17 @@ namespace Scripts.Players
         {
             currentWeapon = newWeapon;
             Debug.Log("무기교체 성공");
+        }
+
+        private void OnDrawGizmos()
+        {
+            Gizmos.color = isGrounded ? Color.green : Color.red;
+
+            // 박스가 그려질 중심 위치
+            Vector3 centerPos = transform.position + boxOffset;
+
+            // 크기 그대로 박스 딱 한 개만 그림!
+            Gizmos.DrawWireCube(centerPos, boxSize);
         }
     }
 }

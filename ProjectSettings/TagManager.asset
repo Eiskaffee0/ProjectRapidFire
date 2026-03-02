@@ -16,8 +16,8 @@ TagManager:
   - PlayerBullet
   - Enemy
   - EnemyBullet
-  - Objs
-  - 
+  - Obstacle
+  - Event
   - 
   - 
   - 

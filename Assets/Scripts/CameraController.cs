@@ -8,24 +8,15 @@ namespace Scripts.Managers
     {
         [Header("플레이어 추적 설정")]
         public float smoothSpeed = 5f;
-        public float offsetX = 3f; // 카메라가 플레이어보다 살짝 앞을 비추도록 오프셋을 잡아줌
-        private float maxCameraX = float.MinValue; //플로트 민벨류를 이용해 카메라가 해당 값보다 왼쪽으로 갈 수 없게 막아줌.
+        public float offsetX = 3f;
+        private float maxCameraX = float.MinValue;
 
         private void LateUpdate()
         {
-            //매니저나 플레이어가 없으면 작동 안하게 안전장치(버그나 플레이어가 죽어서 리스폰 대기상황일 때)
-            if (GameManager.Instance == null || GameManager.Instance.player == null)
-            {
-                return;
-            }
-
-            if (GameManager.Instance.isScrollLocked)
-            {
-                return;
-            }
+            if (GameManager.Instance == null || GameManager.Instance.player == null) return;
+            if (GameManager.Instance.isScrollLocked) return;
 
             Transform player = GameManager.Instance.player.transform;
-
             float targetX = player.position.x + offsetX;
 
             if (targetX > maxCameraX)
@@ -33,13 +24,37 @@ namespace Scripts.Managers
                 maxCameraX = targetX;
             }
 
-            //일단은 카메라이동은 X축만. Z축은 당연히 안움직이겠지만 Y축은 3편 2스테이지 보스처럼 상승하면서 하단쏘기 해야하는 보스 구현할 때 해보자.
             Vector3 targetPosition = new Vector3(maxCameraX, transform.position.y, transform.position.z);
-
-            //Lerp가 부드럽게 카메라 움직여주는 기능이라고함. 제미나이 최고.
             transform.position = Vector3.Lerp(transform.position, targetPosition, smoothSpeed * Time.deltaTime);
         }
+
+        //  [디버그용] 게임 화면에 카메라의 상태를 실시간 텍스트로 띄워줍니다!
+        /*private void OnGUI()
+        {
+            if (GameManager.Instance == null) return;
+
+            GUIStyle style = new GUIStyle();
+            style.fontSize = 24;
+            style.normal.textColor = Color.yellow;
+            style.fontStyle = FontStyle.Bold;
+
+            GUILayout.BeginArea(new Rect(10, 10, 500, 300));
+            GUILayout.Label("===  카메라 디버그 패널 ===", style);
+
+            if (GameManager.Instance.isScrollLocked)
+                GUILayout.Label(" 상태: 스크롤 잠김 (이벤트 진행중!)", style);
+            else
+                GUILayout.Label(" 상태: 자유 이동 가능", style);
+
+            if (GameManager.Instance.player != null)
+            {
+                float playerX = GameManager.Instance.player.transform.position.x;
+                GUILayout.Label($" 플레이어 X 위치: {playerX:F2}", style);
+                GUILayout.Label($" 카메라가 가야할 목표 X: {(playerX + offsetX):F2}", style);
+            }
+            GUILayout.Label($"벽(최대) X 위치: {maxCameraX:F2}", style);
+
+            GUILayout.EndArea();
+        }*/
     }
-
 }
-

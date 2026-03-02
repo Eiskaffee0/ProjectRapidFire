@@ -13,6 +13,8 @@ namespace Scripts.Managers
             private set;
         }
 
+        public GameObject gameOverUI; // 인스펙터에서 Game Over 텍스트 UI를 끌어다 넣을 공간
+
         [Header("플레이어 데이터")]
         public Player player;
         public GameObject PlayerPrefab;
@@ -28,7 +30,7 @@ namespace Scripts.Managers
         public bool isScrollLocked = false; //화면 잠금여부
         private Camera mainCam;
 
-                
+
         void Awake()
         {
             if (Instance == null)
@@ -65,18 +67,42 @@ namespace Scripts.Managers
         public void OnPlayerDied(Vector3 deathPosition)
         {
             currentLives--;
-            Debug.Log($"플레이어 사망. 남은 목숨{currentLives}");
+            Debug.Log($"플레이어 사망. 남은 목숨: {currentLives}");
 
             if (currentLives > 0)
             {
                 StartCoroutine(RespawnRoutine(deathPosition));
             }
-
             else
             {
-                Debug.Log("Game Over");
-                // 게임오버 UI 호출부를 넣어주자.
+                Debug.Log("게임 오버 판정 완료. 코루틴 진입.");
+                StartCoroutine(GameOverRoutine());
             }
+        }
+
+        private IEnumerator GameOverRoutine()
+        {
+            Debug.Log("게임 오버 연출 시작");
+
+            if (gameOverUI != null)
+            {
+                // UI를 켬과 동시에, 최상단 부모(Canvas)가 꺼져있다면 강제로 켭니다.
+                gameOverUI.SetActive(true);
+                Transform parentTransform = gameOverUI.transform.parent;
+                if (parentTransform != null)
+                {
+                    parentTransform.gameObject.SetActive(true);
+                }
+            }
+            else
+            {
+                Debug.LogError("GameManager에 GameOver UI가 할당되지 않았습니다.");
+            }
+
+            yield return new WaitForSeconds(3f);
+
+            Debug.Log("타이틀 씬으로 이동 시도");
+            UnityEngine.SceneManagement.SceneManager.LoadScene(0);
         }
 
         public IEnumerator RespawnRoutine(Vector3 deathPosition)

@@ -1,0 +1,120 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1001 &3333164066329965733
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 427430115561689777, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8165681645974627373, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      propertyPath: m_Name
+      value: Boss
+      objectReference: {fileID: 0}
+    m_RemovedComponents:
+    - {fileID: 233093580439387010, guid: 4561cc1d0b9e03348a166091b46bf4d0, type: 3}
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8165681645974627373, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -4122248974079243656}
+  m_SourcePrefab: {fileID: 100100000, guid: 4561cc1d0b9e03348a166091b46bf4d0, type: 3}
+--- !u!23 &2609191877734907966 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 753351551875609755, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+    type: 3}
+  m_PrefabInstance: {fileID: 3333164066329965733}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &6850981358941966472 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8165681645974627373, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+    type: 3}
+  m_PrefabInstance: {fileID: 3333164066329965733}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &-4122248974079243656
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6850981358941966472}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe759c626339afd4e8ca09871155b36f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHp: 50
+  moveSpeed: 4
+  attackDistance: 4
+  attackCooldown: 3
+  burstCount: 4
+  burstInterval: 0.15
+  bulletPrefab: {fileID: 3065551104849355682, guid: 4f7c59328375b8e48bc331b45205e65a,
+    type: 3}
+  firePoint: {fileID: 8645822576512564646}
+  bossRenderer: {fileID: 2609191877734907966}
+  hitColor: {r: 1, g: 0, b: 0, a: 1}
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  groundCheckDistance: 1.1
+--- !u!4 &8645822576512564646 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 6466578479514437891, guid: 4561cc1d0b9e03348a166091b46bf4d0,
+    type: 3}
+  m_PrefabInstance: {fileID: 3333164066329965733}
+  m_PrefabAsset: {fileID: 0}
